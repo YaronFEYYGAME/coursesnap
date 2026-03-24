@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#6C63FF">
+<meta name="apple-mobile-web-app-title" content="CourseSnap">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='90' fill='%236C63FF'/><text x='256' y='340' font-size='280' text-anchor='middle' fill='white'>📸</text></svg>">
+<title>CourseSnap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0b0b14;--card:#161625;--card-hover:#1e1e33;--accent:#6C63FF;--accent2:#8B83FF;
+  --text:#f0f0f5;--text2:#9595a8;--danger:#ff4757;--success:#2ed573;
+  --radius:16px;--radius-sm:10px;
+  --safe-top:env(safe-area-inset-top);--safe-bottom:env(safe-area-inset-bottom);
+}
+html,body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100%;touch-action:manipulation}
+#app{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;padding-top:var(--safe-top)}
+.header{padding:12px 16px 8px;flex-shrink:0}
+.header h1{font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.search-bar{margin:8px 16px 4px;position:relative;flex-shrink:0}
+.search-bar input{width:100%;padding:10px 14px 10px 40px;background:var(--card);border:1px solid transparent;border-radius:var(--radius-sm);color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:.2s}
+.search-bar input:focus{border-color:var(--accent)}
+.search-bar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--text2)}
+.breadcrumb{padding:8px 16px;font-size:13px;color:var(--text2);flex-shrink:0;display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-height:30px}
+.breadcrumb span{cursor:pointer;transition:.15s}
+.breadcrumb span:hover{color:var(--accent)}
+.breadcrumb .sep{color:var(--text2);opacity:.4;cursor:default}
+.breadcrumb .current{color:var(--text);font-weight:500;cursor:default}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 16px 16px;-webkit-overflow-scrolling:touch}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px 20px;gap:16px}
+.empty-state .icon{font-size:64px;opacity:.8}
+.empty-state p{color:var(--text2);font-size:15px;line-height:1.5;max-width:280px}
+.empty-state button{margin-top:8px}
+.btn{padding:12px 24px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:active{background:var(--accent2);transform:scale(.97)}
+.btn-secondary{background:var(--card);color:var(--text)}
+.btn-secondary:active{background:var(--card-hover)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:active{opacity:.8}
+.btn-sm{padding:8px 16px;font-size:13px}
+.btn-icon{width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;border:none;background:var(--card);color:var(--text);cursor:pointer;transition:.2s}
+.btn-icon:active{background:var(--card-hover);transform:scale(.93)}
+
+/* Folders */
+.folder-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.folder-card{background:var(--card);border-radius:var(--radius);padding:14px;cursor:pointer;transition:.2s;position:relative;overflow:hidden;min-height:100px;display:flex;flex-direction:column;justify-content:space-between}
+.folder-card:active{transform:scale(.97);background:var(--card-hover)}
+.folder-card .color-strip{position:absolute;top:0;left:0;right:0;height:4px}
+.folder-card .emoji{font-size:28px;margin-bottom:4px}
+.folder-card .name{font-size:14px;font-weight:600;line-height:1.3;word-break:break-word}
+.folder-card .count{font-size:12px;color:var(--text2);margin-top:4px}
+.folder-card .preview{position:absolute;right:8px;bottom:8px;width:36px;height:36px;border-radius:6px;object-fit:cover;opacity:.5}
+.folder-card .menu-btn{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:var(--text2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+.folder-card .menu-btn:active{background:rgba(255,255,255,.15)}
+
+/* Photo grid */
+.section-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.photo-grid.col2{grid-template-columns:repeat(2,1fr)}
+.photo-item{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer}
+.photo-item img{width:100%;height:100%;object-fit:cover;transition:.2s}
+.photo-item:active img{transform:scale(1.03)}
+.photo-item .date-badge{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.7);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;backdrop-filter:blur(4px)}
+
+/* Action buttons row */
+.action-row{display:flex;gap:10px;margin-bottom:12px}
+.action-btn{flex:1;padding:12px;border:2px dashed rgba(108,99,255,.3);border-radius:var(--radius-sm);background:rgba(108,99,255,.06);color:var(--accent);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:.2s}
+.action-btn:active{background:rgba(108,99,255,.12);transform:scale(.97)}
+.action-btn svg{width:24px;height:24px}
+
+/* Bottom nav */
+.bottom-nav{display:flex;background:var(--card);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;padding-bottom:var(--safe-bottom)}
+.bottom-nav button{flex:1;padding:10px 0 8px;border:none;background:none;color:var(--text2);font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.15s}
+.bottom-nav button.active{color:var(--accent)}
+.bottom-nav button svg{width:22px;height:22px}
+
+/* Modals */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:100;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);animation:fadeIn .2s}
+.modal{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:24px 20px calc(24px + var(--safe-bottom));animation:slideUp .25s ease-out;max-height:80vh;overflow-y:auto}
+.modal-center{align-items:center}
+.modal-center .modal{border-radius:20px;margin:20px;max-height:85vh}
+.modal h2{font-size:18px;font-weight:700;margin-bottom:16px}
+.modal label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.modal input[type="text"],.modal textarea{width:100%;padding:10px 14px;background:var(--bg);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:.2s}
+.modal input[type="text"]:focus,.modal textarea:focus{border-color:var(--accent)}
+.modal textarea{resize:vertical;min-height:60px}
+.modal .btn-row{display:flex;gap:10px;margin-top:20px}
+.modal .btn-row .btn{flex:1;justify-content:center}
+
+/* Color picker */
+.color-picker{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.color-dot{width:32px;height:32px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:.15s}
+.color-dot.active{border-color:#fff;transform:scale(1.15)}
+
+/* Emoji picker */
+.emoji-picker{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+.emoji-opt{font-size:26px;cursor:pointer;padding:4px;border-radius:8px;border:2px solid transparent;transition:.15s}
+.emoji-opt.active{border-color:var(--accent);background:rgba(108,99,255,.15)}
+
+/* Fullscreen viewer */
+.viewer{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:200;display:flex;flex-direction:column;animation:fadeIn .2s}
+.viewer-header{position:absolute;top:0;left:0;right:0;padding:calc(12px + var(--safe-top)) 16px 12px;background:linear-gradient(to bottom,rgba(0,0,0,.8),transparent);z-index:5;display:flex;justify-content:space-between;align-items:flex-start}
+.viewer-footer{position:absolute;bottom:0;left:0;right:0;padding:16px 16px calc(16px + var(--safe-bottom));background:linear-gradient(to top,rgba(0,0,0,.8),transparent);z-index:5}
+.viewer-footer .date{font-size:13px;color:rgba(255,255,255,.7)}
+.viewer-footer .note{font-size:14px;color:#fff;margin-top:4px}
+.viewer-actions{display:flex;gap:12px;margin-top:12px}
+.viewer-actions button{background:rgba(255,255,255,.15);border:none;color:#fff;padding:8px 14px;border-radius:20px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px)}
+.viewer-actions button:active{background:rgba(255,255,255,.25)}
+.viewer-img-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:pinch-zoom}
+.viewer-img-wrap img{max-width:100%;max-height:100%;object-fit:contain}
+
+/* Context menu */
+.ctx-menu{position:fixed;z-index:150;background:var(--card);border-radius:var(--radius-sm);padding:6px 0;min-width:180px;box-shadow:0 10px 40px rgba(0,0,0,.5);animation:fadeIn .15s}
+.ctx-menu button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;border:none;background:none;color:var(--text);font-family:inherit;font-size:14px;cursor:pointer;text-align:left}
+.ctx-menu button:active{background:rgba(255,255,255,.05)}
+.ctx-menu button.danger{color:var(--danger)}
+
+/* Folder select in move modal */
+.folder-select-list{max-height:300px;overflow-y:auto}
+.folder-select-item{padding:12px;border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;gap:10px;transition:.15s}
+.folder-select-item:active,.folder-select-item:hover{background:rgba(255,255,255,.05)}
+.folder-select-item .path{font-size:12px;color:var(--text2)}
+
+/* Settings */
+.settings-row{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center}
+.settings-row .label{font-size:15px}
+.settings-row .value{font-size:14px;color:var(--text2)}
+
+/* Search results */
+.search-result{padding:12px;background:var(--card);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:.15s}
+.search-result:active{background:var(--card-hover)}
+.search-result .path{font-size:12px;color:var(--accent);margin-bottom:4px}
+.search-result .name{font-size:14px;font-weight:500}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+/* Scrollbar */
+.content::-webkit-scrollbar{width:0;display:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header"><h1>📸 CourseSnap</h1></div>
+  <div class="search-bar" id="searchBarWrap" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="searchInput" placeholder="Rechercher dossiers et notes...">
+  </div>
+  <div class="breadcrumb" id="breadcrumb"></div>
+  <div class="content" id="content"></div>
+  <div class="bottom-nav">
+    <button id="navFolders" class="active" onclick="switchTab('folders')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      Dossiers
+    </button>
+    <button id="navRecent" onclick="switchTab('recent')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Récentes
+    </button>
+  </div>
+</div>
+
+<!-- Hidden file inputs -->
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+<input type="file" id="galleryInput" accept="image/*" multiple style="display:none">
+
+<script>
+// ===================== DATABASE =====================
+const DB_NAME = 'CourseSnapDB';
+const DB_VERSION = 1;
+let db;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('folders')) {
+        const fs = d.createObjectStore('folders', { keyPath: 'id' });
+        fs.createIndex('parentId', 'parentId');
+      }
+      if (!d.objectStoreNames.contains('photos')) {
+        const ps = d.createObjectStore('photos', { keyPath: 'id' });
+        ps.createIndex('folderId', 'folderId');
+        ps.createIndex('date', 'date');
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+function dbOp(store, mode, fn) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, mode);
+    const s = tx.objectStore(store);
+    const result = fn(s);
+    if (result && result.onsuccess !== undefined) {
+      result.onsuccess = () => resolve(result.result);
+      result.onerror = () => reject(result.error);
+    } else {
+      tx.oncomplete = () => resolve(result);
+      tx.onerror = () => reject(tx.error);
+    }
+  });
+}
+
+async function getAllFolders() {
+  return dbOp('folders', 'readonly', s => s.getAll());
+}
+
+async function getFolder(id) {
+  return dbOp('folders', 'readonly', s => s.get(id));
+}
+
+async function saveFolder(folder) {
+  return dbOp('folders', 'readwrite', s => s.put(folder));
+}
+
+async function deleteFolder(id) {
+  return dbOp('folders', 'readwrite', s => s.delete(id));
+}
+
+async function getAllPhotos() {
+  return dbOp('photos', 'readonly', s => s.getAll());
+}
+
+async function getPhotosByFolder(folderId) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('photos', 'readonly');
+    const idx = tx.objectStore('photos').index('folderId');
+    const req = idx.getAll(folderId);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getPhoto(id) {
+  return dbOp('photos', 'readonly', s => s.get(id));
+}
+
+async function savePhoto(photo) {
+  return dbOp('photos', 'readwrite', s => s.put(photo));
+}
+
+async function deletePhoto(id) {
+  return dbOp('photos', 'readwrite', s => s.delete(id));
+}
+
+// ===================== STATE =====================
+let currentTab = 'folders';
+let currentFolderId = null; // null = root
+let allFolders = [];
+let allPhotos = [];
+let searchQuery = '';
+let viewerPhotos = [];
+let viewerIndex = 0;
+
+const COLORS = ['#6C63FF','#FF6B6B','#4ECDC4','#FFE66D','#A8E6CF','#FF8A5C','#D4A5FF','#5CB8FF','#FF5E9A','#45B7AA'];
+const EMOJIS = ['📐','🔬','📚','🧮','💻','🎨','🌍','📝','🧪','🎵','⚖️','🏛️','🧬','📊','🇬🇧','✏️','📖','🔢'];
+
+// ===================== IMAGE PROCESSING =====================
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsArrayBuffer(file);
+  });
+}
+
+function extractEXIFDate(file) {
+  return new Promise(async resolve => {
+    try {
+      const buf = await readFileAsArrayBuffer(file);
+      const view = new DataView(buf);
+      if (view.getUint16(0) !== 0xFFD8) return resolve(null);
+      let offset = 2;
+      while (offset < view.byteLength - 2) {
+        const marker = view.getUint16(offset);
+        if (marker === 0xFFE1) {
+          const length = view.getUint16(offset + 2);
+          const exifData = buf.slice(offset + 4, offset + 2 + length);
+          const exifView = new DataView(exifData);
+          const exifStr = String.fromCharCode(exifView.getUint8(0), exifView.getUint8(1), exifView.getUint8(2), exifView.getUint8(3));
+          if (exifStr !== 'Exif') return resolve(null);
+          const tiffOffset = 6;
+          const littleEndian = exifView.getUint16(tiffOffset) === 0x4949;
+          const ifdOffset = exifView.getUint32(tiffOffset + 4, littleEndian);
+          const entries = exifView.getUint16(tiffOffset + ifdOffset, littleEndian);
+          for (let i = 0; i < entries; i++) {
+            const entryOffset = tiffOffset + ifdOffset + 2 + i * 12;
+            if (entryOffset + 12 > exifData.byteLength) break;
+            const tag = exifView.getUint16(entryOffset, littleEndian);
+            if (tag === 0x0132 || tag === 0x9003) {
+              const valueOffset = exifView.getUint32(entryOffset + 8, littleEndian);
+              let dateStr = '';
+              for (let j = 0; j < 19; j++) {
+                dateStr += String.fromCharCode(exifView.getUint8(tiffOffset + valueOffset + j));
+              }
+              // "2024:03:24 10:35:00" → parse
+              const parts = dateStr.match(/(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+              if (parts) {
+                const d = new Date(parts[1], parts[2]-1, parts[3], parts[4], parts[5], parts[6]);
+                if (!isNaN(d.getTime())) return resolve(d.getTime());
+              }
+            }
+          }
+          return resolve(null);
+        }
+        if ((marker & 0xFF00) !== 0xFF00) break;
+        offset += 2 + view.getUint16(offset + 2);
+      }
+      resolve(null);
+    } catch(e) { resolve(null); }
+  });
+}
+
+function compressImage(dataUrl, maxWidth, quality) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = (maxWidth / w) * h; w = maxWidth; }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
+async function processAndSavePhoto(file) {
+  const exifDate = await extractEXIFDate(file);
+  const dataUrl = await readFileAsDataURL(file);
+  const full = await compressImage(dataUrl, 1920, 0.8);
+  const thumb = await compressImage(dataUrl, 300, 0.7);
+  const photo = {
+    id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+    folderId: currentFolderId,
+    date: exifDate || Date.now(),
+    addedDate: Date.now(),
+    note: '',
+    full: full,
+    thumb: thumb
+  };
+  await savePhoto(photo);
+  return photo;
+}
+
+// ===================== HELPERS =====================
+function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 8); }
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()} - ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function formatDateShort(ts) {
+  const d = new Date(ts);
+  return `${d.getDate()}/${d.getMonth()+1} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function getSubFolders(parentId) {
+  return allFolders.filter(f => f.parentId === parentId);
+}
+
+function getFolderDepth(folderId) {
+  let depth = 0, id = folderId;
+  while (id) {
+    const f = allFolders.find(x => x.id === id);
+    if (!f) break;
+    id = f.parentId;
+    depth++;
+  }
+  return depth;
+}
+
+function getFolderPath(folderId) {
+  const parts = [];
+  let id = folderId;
+  while (id) {
+    const f = allFolders.find(x => x.id === id);
+    if (!f) break;
+    parts.unshift(f);
+    id = f.parentId;
+  }
+  return parts;
+}
+
+function getAllDescendantFolderIds(folderId) {
+  const ids = [folderId];
+  const children = allFolders.filter(f => f.parentId === folderId);
+  for (const c of children) ids.push(...getAllDescendantFolderIds(c.id));
+  return ids;
+}
+
+function countPhotosInFolder(folderId) {
+  const ids = getAllDescendantFolderIds(folderId);
+  return allPhotos.filter(p => ids.includes(p.folderId)).length;
+}
+
+function getLastPhotoThumb(folderId) {
+  const ids = getAllDescendantFolderIds(folderId);
+  const photos = allPhotos.filter(p => ids.includes(p.folderId)).sort((a,b) => b.date - a.date);
+  return photos.length > 0 ? photos[0].thumb : null;
+}
+
+function estimateStorageSize() {
+  let total = 0;
+  for (const p of allPhotos) {
+    total += (p.full ? p.full.length : 0) + (p.thumb ? p.thumb.length : 0);
+  }
+  // base64 is ~1.37x actual binary
+  return Math.round(total * 0.73 / 1024 / 1024);
+}
+
+// ===================== RENDERING =====================
+async function refresh() {
+  allFolders = await getAllFolders();
+  allPhotos = await getAllPhotos();
+  render();
+}
+
+function render() {
+  if (currentTab === 'folders') renderFolders();
+  else if (currentTab === 'recent') renderRecent();
+  else if (currentTab === 'settings') renderSettings();
+  else if (currentTab === 'search') renderSearch();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  if (tab === 'folders') { currentFolderId = null; }
+  document.getElementById('navFolders').classList.toggle('active', tab === 'folders');
+  document.getElementById('navRecent').classList.toggle('active', tab === 'recent');
+  document.getElementById('searchBarWrap').style.display = (tab === 'folders' && !currentFolderId) ? '' : 'none';
+  render();
+}
+
+function renderBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  if (currentTab !== 'folders' || !currentFolderId) {
+    bc.innerHTML = '';
+    return;
+  }
+  const path = getFolderPath(currentFolderId);
+  let html = `<span onclick="currentFolderId=null;document.getElementById('searchBarWrap').style.display='';render()">Accueil</span>`;
+  for (let i = 0; i < path.length; i++) {
+    html += `<span class="sep">›</span>`;
+    if (i === path.length - 1) {
+      html += `<span class="current">${path[i].emoji || ''} ${path[i].name}</span>`;
+    } else {
+      html += `<span onclick="currentFolderId='${path[i].id}';render()">${path[i].emoji || ''} ${path[i].name}</span>`;
+    }
+  }
+  bc.innerHTML = html;
+}
+
+function renderFolders() {
+  renderBreadcrumb();
+  const content = document.getElementById('content');
+  const subFolders = getSubFolders(currentFolderId);
+  const photos = allPhotos.filter(p => p.folderId === currentFolderId).sort((a,b) => b.date - a.date);
+
+  if (!currentFolderId && subFolders.length === 0 && photos.length === 0) {
+    content.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📂</div>
+        <p>Aucun dossier — Crée ton premier dossier pour organiser tes photos de cours !</p>
+        <button class="btn btn-primary" onclick="showCreateFolderModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Créer un dossier
+        </button>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+
+  // Action row (in a folder)
+  if (currentFolderId) {
+    html += `<div class="action-row">
+      <button class="action-btn" onclick="document.getElementById('cameraInput').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Photo
+      </button>
+      <button class="action-btn" onclick="document.getElementById('galleryInput').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Galerie
+      </button>
+      ${getFolderDepth(currentFolderId) < 3 ? `<button class="action-btn" onclick="showCreateFolderModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg>
+        Dossier
+      </button>` : ''}
+    </div>`;
+  }
+
+  // Folders
+  if (subFolders.length > 0) {
+    if (currentFolderId) html += `<div class="section-title">Sous-dossiers</div>`;
+    html += `<div class="folder-grid">`;
+    for (const f of subFolders) {
+      const count = countPhotosInFolder(f.id);
+      const preview = getLastPhotoThumb(f.id);
+      html += `
+        <div class="folder-card" onclick="openFolder('${f.id}')">
+          <div class="color-strip" style="background:${f.color || COLORS[0]}"></div>
+          <button class="menu-btn" onclick="event.stopPropagation();showFolderMenu(event,'${f.id}')">⋮</button>
+          <div>
+            <div class="emoji">${f.emoji || '📁'}</div>
+            <div class="name">${f.name}</div>
+          </div>
+          <div class="count">${count} photo${count !== 1 ? 's' : ''}</div>
+          ${preview ? `<img class="preview" src="${preview}" alt="">` : ''}
+        </div>`;
+    }
+    html += `</div>`;
+  }
+
+  // Add folder button at root
+  if (!currentFolderId) {
+    html += `<div style="margin:12px 0">
+      <button class="btn btn-primary" onclick="showCreateFolderModal()" style="width:100%;justify-content:center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Nouveau dossier
+      </button>
+    </div>`;
+  }
+
+  // Photos
+  if (photos.length > 0) {
+    if (subFolders.length > 0) html += `<div class="section-title">Photos</div>`;
+    html += `<div class="photo-grid">`;
+    for (const p of photos) {
+      html += `
+        <div class="photo-item" onclick="openViewer('${p.id}')">
+          <img src="${p.thumb}" alt="" loading="lazy">
+          <div class="date-badge">${formatDateShort(p.date)}</div>
+        </div>`;
+    }
+    html += `</div>`;
+  }
+
+  if (currentFolderId && photos.length === 0 && subFolders.length === 0) {
+    html += `<div class="empty-state" style="height:auto;padding:40px 0">
+      <div class="icon">📷</div>
+      <p>Aucune photo dans ce dossier. Commence par prendre une photo ou en importer !</p>
+    </div>`;
+  }
+
+  content.innerHTML = html;
+}
+
+function renderRecent() {
+  renderBreadcrumb();
+  document.getElementById('searchBarWrap').style.display = 'none';
+  const content = document.getElementById('content');
+  const photos = [...allPhotos].sort((a,b) => b.date - a.date);
+
+  if (photos.length === 0) {
+    content.innerHTML = `<div class="empty-state">
+      <div class="icon">🕐</div>
+      <p>Aucune photo pour le moment. Ajoute des photos dans tes dossiers !</p>
+    </div>`;
+    return;
+  }
+
+  // Group by day
+  const groups = {};
+  for (const p of photos) {
+    const d = new Date(p.date);
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    if (!groups[key]) groups[key] = { date: p.date, photos: [] };
+    groups[key].photos.push(p);
+  }
+
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 16px">
+    <div class="section-title" style="margin:0">${photos.length} photo${photos.length>1?'s':''} — ~${estimateStorageSize()} Mo</div>
+  </div>`;
+
+  for (const key of Object.keys(groups)) {
+    const g = groups[key];
+    html += `<div class="section-title">${formatDate(g.date).split(' - ')[0]}</div>`;
+    html += `<div class="photo-grid">`;
+    for (const p of g.photos) {
+      html += `<div class="photo-item" onclick="openViewer('${p.id}','recent')">
+        <img src="${p.thumb}" alt="" loading="lazy">
+        <div class="date-badge">${formatDateShort(p.date)}</div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  content.innerHTML = html;
+}
+
+function renderSearch() {
+  renderBreadcrumb();
+  const content = document.getElementById('content');
+  const q = searchQuery.toLowerCase().trim();
+  if (!q) { content.innerHTML = ''; return; }
+
+  let results = [];
+
+  // Search folders
+  for (const f of allFolders) {
+    if (f.name.toLowerCase().includes(q)) {
+      const path = getFolderPath(f.id).map(x => x.name).join(' › ');
+      results.push({ type: 'folder', id: f.id, name: `${f.emoji||'📁'} ${f.name}`, path });
+    }
+  }
+
+  // Search photo notes
+  for (const p of allPhotos) {
+    if (p.note && p.note.toLowerCase().includes(q)) {
+      const folder = allFolders.find(f => f.id === p.folderId);
+      const path = folder ? getFolderPath(folder.id).map(x => x.name).join(' › ') : 'Racine';
+      results.push({ type: 'photo', id: p.id, name: p.note, path, date: formatDateShort(p.date) });
+    }
+  }
+
+  if (results.length === 0) {
+    content.innerHTML = `<div class="empty-state" style="height:auto;padding:40px 0"><p>Aucun résultat pour "${searchQuery}"</p></div>`;
+    return;
+  }
+
+  let html = `<div class="section-title">${results.length} résultat${results.length>1?'s':''}</div>`;
+  for (const r of results) {
+    if (r.type === 'folder') {
+      html += `<div class="search-result" onclick="openFolder('${r.id}');currentTab='folders';document.getElementById('navFolders').classList.add('active');document.getElementById('navRecent').classList.remove('active')">
+        <div class="path">${r.path}</div>
+        <div class="name">${r.name}</div>
+      </div>`;
+    } else {
+      html += `<div class="search-result" onclick="openViewer('${r.id}','recent')">
+        <div class="path">${r.path} · ${r.date}</div>
+        <div class="name">📝 ${r.name}</div>
+      </div>`;
+    }
+  }
+
+  content.innerHTML = html;
+}
+
+// ===================== NAVIGATION =====================
+function openFolder(id) {
+  currentFolderId = id;
+  currentTab = 'folders';
+  document.getElementById('searchBarWrap').style.display = 'none';
+  document.getElementById('searchInput').value = '';
+  searchQuery = '';
+  render();
+}
+
+// ===================== FOLDER CRUD =====================
+function showCreateFolderModal() {
+  showModal(`
+    <h2>Nouveau dossier</h2>
+    <label>Nom</label>
+    <input type="text" id="folderName" placeholder="Ex: Mathématiques" autofocus>
+    <label style="margin-top:14px">Couleur</label>
+    <div class="color-picker" id="colorPicker"></div>
+    <label style="margin-top:8px">Icône</label>
+    <div class="emoji-picker" id="emojiPicker"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="createFolder()">Créer</button>
+    </div>
+  `);
+  renderColorPicker('colorPicker', COLORS[0]);
+  renderEmojiPicker('emojiPicker', EMOJIS[0]);
+  setTimeout(() => document.getElementById('folderName').focus(), 100);
+}
+
+function renderColorPicker(elId, selected) {
+  const el = document.getElementById(elId);
+  el.innerHTML = COLORS.map(c => `<div class="color-dot ${c===selected?'active':''}" style="background:${c}" onclick="this.parentNode.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));this.classList.add('active')" data-color="${c}"></div>`).join('');
+}
+
+function renderEmojiPicker(elId, selected) {
+  const el = document.getElementById(elId);
+  el.innerHTML = EMOJIS.map(e => `<span class="emoji-opt ${e===selected?'active':''}" onclick="this.parentNode.querySelectorAll('.emoji-opt').forEach(d=>d.classList.remove('active'));this.classList.add('active')" data-emoji="${e}">${e}</span>`).join('');
+}
+
+async function createFolder() {
+  const name = document.getElementById('folderName').value.trim();
+  if (!name) return;
+  const color = document.querySelector('#colorPicker .color-dot.active')?.dataset.color || COLORS[0];
+  const emoji = document.querySelector('#emojiPicker .emoji-opt.active')?.dataset.emoji || '📁';
+  const folder = { id: 'f_' + uid(), name, color, emoji, parentId: currentFolderId, created: Date.now() };
+  await saveFolder(folder);
+  closeModal();
+  await refresh();
+}
+
+function showFolderMenu(event, folderId) {
+  event.stopPropagation();
+  closeContextMenu();
+  const rect = event.target.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.className = 'ctx-menu';
+  menu.id = 'ctxMenu';
+  menu.style.top = rect.bottom + 4 + 'px';
+  menu.style.right = (window.innerWidth - rect.right) + 'px';
+  menu.innerHTML = `
+    <button onclick="showRenameFolderModal('${folderId}')">✏️ Renommer</button>
+    <button onclick="showEditFolderModal('${folderId}')">🎨 Modifier couleur/icône</button>
+    <button class="danger" onclick="confirmDeleteFolder('${folderId}')">🗑 Supprimer</button>
+  `;
+  document.body.appendChild(menu);
+  // Adjust if off-screen
+  requestAnimationFrame(() => {
+    const mr = menu.getBoundingClientRect();
+    if (mr.right > window.innerWidth) menu.style.right = '8px';
+    if (mr.bottom > window.innerHeight) { menu.style.top = ''; menu.style.bottom = '8px'; }
+  });
+  setTimeout(() => document.addEventListener('click', closeContextMenu, { once: true }), 10);
+}
+
+function closeContextMenu() {
+  document.getElementById('ctxMenu')?.remove();
+}
+
+function showRenameFolderModal(folderId) {
+  closeContextMenu();
+  const folder = allFolders.find(f => f.id === folderId);
+  if (!folder) return;
+  showModal(`
+    <h2>Renommer</h2>
+    <input type="text" id="renameName" value="${folder.name}">
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="renameFolder('${folderId}')">Enregistrer</button>
+    </div>
+  `);
+  setTimeout(() => { const el = document.getElementById('renameName'); el.focus(); el.select(); }, 100);
+}
+
+async function renameFolder(folderId) {
+  const name = document.getElementById('renameName').value.trim();
+  if (!name) return;
+  const folder = await getFolder(folderId);
+  folder.name = name;
+  await saveFolder(folder);
+  closeModal();
+  await refresh();
+}
+
+function showEditFolderModal(folderId) {
+  closeContextMenu();
+  const folder = allFolders.find(f => f.id === folderId);
+  if (!folder) return;
+  showModal(`
+    <h2>Modifier ${folder.name}</h2>
+    <label>Couleur</label>
+    <div class="color-picker" id="colorPicker"></div>
+    <label style="margin-top:8px">Icône</label>
+    <div class="emoji-picker" id="emojiPicker"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="editFolderAppearance('${folderId}')">Enregistrer</button>
+    </div>
+  `);
+  renderColorPicker('colorPicker', folder.color || COLORS[0]);
+  renderEmojiPicker('emojiPicker', folder.emoji || EMOJIS[0]);
+}
+
+async function editFolderAppearance(folderId) {
+  const folder = await getFolder(folderId);
+  folder.color = document.querySelector('#colorPicker .color-dot.active')?.dataset.color || folder.color;
+  folder.emoji = document.querySelector('#emojiPicker .emoji-opt.active')?.dataset.emoji || folder.emoji;
+  await saveFolder(folder);
+  closeModal();
+  await refresh();
+}
+
+function confirmDeleteFolder(folderId) {
+  closeContextMenu();
+  const folder = allFolders.find(f => f.id === folderId);
+  if (!folder) return;
+  const count = countPhotosInFolder(folderId);
+  showModal(`
+    <h2>Supprimer "${folder.name}" ?</h2>
+    <p style="color:var(--text2);font-size:14px;line-height:1.5">
+      ${count > 0 ? `Ce dossier contient <strong>${count} photo${count>1?'s':''}</strong> et tous ses sous-dossiers. Tout sera supprimé définitivement.` : 'Ce dossier et tous ses sous-dossiers seront supprimés.'}
+    </p>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-danger" onclick="deleteFolderRecursive('${folderId}')">Supprimer</button>
+    </div>
+  `);
+}
+
+async function deleteFolderRecursive(folderId) {
+  const ids = getAllDescendantFolderIds(folderId);
+  for (const id of ids) {
+    const photos = await getPhotosByFolder(id);
+    for (const p of photos) await deletePhoto(p.id);
+    await deleteFolder(id);
+  }
+  if (currentFolderId === folderId) currentFolderId = allFolders.find(f => f.id === folderId)?.parentId || null;
+  closeModal();
+  await refresh();
+}
+
+// ===================== PHOTO HANDLING =====================
+document.getElementById('cameraInput').addEventListener('change', handlePhotoInput);
+document.getElementById('galleryInput').addEventListener('change', handlePhotoInput);
+
+async function handlePhotoInput(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  // Show loading
+  const content = document.getElementById('content');
+  const origHtml = content.innerHTML;
+  const loadingEl = document.createElement('div');
+  loadingEl.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#fff;font-size:16px';
+  loadingEl.innerHTML = `<div style="animation:spin 1s linear infinite;width:32px;height:32px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%"></div><div id="loadingText">Import 0/${files.length}...</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+  document.body.appendChild(loadingEl);
+
+  for (let i = 0; i < files.length; i++) {
+    document.getElementById('loadingText').textContent = `Import ${i+1}/${files.length}...`;
+    await processAndSavePhoto(files[i]);
+  }
+
+  loadingEl.remove();
+  e.target.value = '';
+  await refresh();
+}
+
+// ===================== VIEWER =====================
+let viewerContext = 'folder';
+let touchStartX = 0;
+let touchDiffX = 0;
+
+function openViewer(photoId, context) {
+  viewerContext = context || 'folder';
+  if (viewerContext === 'recent') {
+    viewerPhotos = [...allPhotos].sort((a,b) => b.date - a.date);
+  } else {
+    viewerPhotos = allPhotos.filter(p => p.folderId === currentFolderId).sort((a,b) => b.date - a.date);
+  }
+  viewerIndex = viewerPhotos.findIndex(p => p.id === photoId);
+  if (viewerIndex < 0) viewerIndex = 0;
+  renderViewer();
+}
+
+function renderViewer() {
+  const p = viewerPhotos[viewerIndex];
+  if (!p) return closeViewer();
+
+  const folder = allFolders.find(f => f.id === p.folderId);
+  const folderPath = folder ? getFolderPath(folder.id).map(x => x.name).join(' › ') : '';
+
+  const existing = document.getElementById('viewer');
+  if (existing) existing.remove();
+
+  const div = document.createElement('div');
+  div.className = 'viewer';
+  div.id = 'viewer';
+  div.innerHTML = `
+    <div class="viewer-header">
+      <div style="font-size:13px;color:rgba(255,255,255,.7)">${viewerIndex+1}/${viewerPhotos.length}${folderPath ? ' · '+folderPath : ''}</div>
+      <button class="btn-icon" onclick="closeViewer()" style="background:rgba(255,255,255,.15);color:#fff">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="viewer-img-wrap" id="viewerImgWrap">
+      <img src="${p.full}" alt="" id="viewerImg">
+    </div>
+    <div class="viewer-footer">
+      <div class="date">${formatDate(p.date)}</div>
+      ${p.note ? `<div class="note">${p.note}</div>` : ''}
+      <div class="viewer-actions">
+        <button onclick="showEditNoteModal('${p.id}')">📝 Note</button>
+        <button onclick="showMovePhotoModal('${p.id}')">📁 Déplacer</button>
+        <button onclick="confirmDeletePhoto('${p.id}')">🗑 Supprimer</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(div);
+
+  // Swipe navigation
+  const wrap = document.getElementById('viewerImgWrap');
+  wrap.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchDiffX = 0; }, { passive: true });
+  wrap.addEventListener('touchmove', e => { touchDiffX = e.touches[0].clientX - touchStartX; }, { passive: true });
+  wrap.addEventListener('touchend', () => {
+    if (Math.abs(touchDiffX) > 60) {
+      if (touchDiffX < 0 && viewerIndex < viewerPhotos.length - 1) { viewerIndex++; renderViewer(); }
+      else if (touchDiffX > 0 && viewerIndex > 0) { viewerIndex--; renderViewer(); }
+    }
+  });
+}
+
+function closeViewer() {
+  document.getElementById('viewer')?.remove();
+}
+
+function showEditNoteModal(photoId) {
+  const p = viewerPhotos.find(x => x.id === photoId);
+  showModal(`
+    <h2>Note</h2>
+    <textarea id="noteText" placeholder="Ajouter une note...">${p?.note || ''}</textarea>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveNote('${photoId}')">Enregistrer</button>
+    </div>
+  `, true);
+  setTimeout(() => document.getElementById('noteText').focus(), 100);
+}
+
+async function saveNote(photoId) {
+  const note = document.getElementById('noteText').value.trim();
+  const photo = await getPhoto(photoId);
+  photo.note = note;
+  await savePhoto(photo);
+  closeModal();
+  await refresh();
+  renderViewer();
+}
+
+function showMovePhotoModal(photoId) {
+  // Build folder tree
+  function buildTree(parentId, depth) {
+    let html = '';
+    const folders = allFolders.filter(f => f.parentId === parentId);
+    for (const f of folders) {
+      const path = getFolderPath(f.id).map(x => x.name).join(' › ');
+      html += `<div class="folder-select-item" style="padding-left:${12 + depth*20}px" onclick="movePhoto('${photoId}','${f.id}')">
+        <span>${f.emoji || '📁'}</span>
+        <div><div>${f.name}</div>${depth > 0 ? `<div class="path">${path}</div>` : ''}</div>
+      </div>`;
+      html += buildTree(f.id, depth + 1);
+    }
+    return html;
+  }
+
+  showModal(`
+    <h2>Déplacer vers...</h2>
+    <div class="folder-select-list">${buildTree(null, 0) || '<p style="color:var(--text2);padding:20px;text-align:center">Aucun dossier disponible</p>'}</div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="closeModal()">Annuler</button></div>
+  `, true);
+}
+
+async function movePhoto(photoId, targetFolderId) {
+  const photo = await getPhoto(photoId);
+  photo.folderId = targetFolderId;
+  await savePhoto(photo);
+  closeModal();
+  await refresh();
+  // Update viewer photos list
+  if (viewerContext === 'recent') {
+    viewerPhotos = [...allPhotos].sort((a,b) => b.date - a.date);
+  } else {
+    viewerPhotos = allPhotos.filter(p => p.folderId === currentFolderId).sort((a,b) => b.date - a.date);
+  }
+  if (viewerPhotos.length === 0) closeViewer();
+  else { viewerIndex = Math.min(viewerIndex, viewerPhotos.length - 1); renderViewer(); }
+}
+
+function confirmDeletePhoto(photoId) {
+  showModal(`
+    <h2>Supprimer cette photo ?</h2>
+    <p style="color:var(--text2);font-size:14px">Cette action est irréversible.</p>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-danger" onclick="doDeletePhoto('${photoId}')">Supprimer</button>
+    </div>
+  `, true);
+}
+
+async function doDeletePhoto(photoId) {
+  await deletePhoto(photoId);
+  closeModal();
+  await refresh();
+  viewerPhotos = viewerPhotos.filter(p => p.id !== photoId);
+  if (viewerPhotos.length === 0) closeViewer();
+  else { viewerIndex = Math.min(viewerIndex, viewerPhotos.length - 1); renderViewer(); }
+}
+
+// ===================== MODAL SYSTEM =====================
+function showModal(html, center) {
+  closeModal();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay' + (center ? ' modal-center' : '');
+  overlay.id = 'modalOverlay';
+  overlay.onclick = e => { if (e.target === overlay) closeModal(); };
+  overlay.innerHTML = `<div class="modal">${html}</div>`;
+  document.body.appendChild(overlay);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay')?.remove();
+}
+
+// ===================== SEARCH =====================
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value;
+  if (searchQuery.trim()) {
+    currentTab = 'search';
+    render();
+  } else {
+    currentTab = 'folders';
+    currentFolderId = null;
+    render();
+  }
+});
+
+document.getElementById('searchInput').addEventListener('focus', () => {
+  document.getElementById('searchBarWrap').style.display = '';
+});
+
+// ===================== INIT =====================
+async function init() {
+  await openDB();
+  await refresh();
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+}
+
+init();
+</script>
+</body>
+</html>

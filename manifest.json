@@ -1,0 +1,18 @@
+{
+  "name": "CourseSnap",
+  "short_name": "CourseSnap",
+  "description": "Organisateur de photos de cours pour étudiant",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0b14",
+  "theme_color": "#6C63FF",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='90' fill='%236C63FF'/><text x='256' y='340' font-size='280' text-anchor='middle' fill='white'>📸</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
